@@ -1474,13 +1474,14 @@ function renderInterview(){
    ============================================================ */
 
 const CARDS = {
-  brief: { ground:'g2', tone:'light', align:'top',    takes:'Paste an email',        art:null },
-  story: { ground:'g1', tone:'dark',  align:'bottom', takes:'PDF · DOCX · Images',   art:null },
-  interview:{ground:'g7',tone:'dark',  align:'bottom', takes:'Researched live',      art:null },
-  proof: { ground:'g3', tone:'dark',  align:'bottom', takes:'PDF · DOCX · TXT',      art:null },
-  brand: { ground:'g5', tone:'light', align:'top',    takes:'PNG · JPEG · PDF · MP4',art:null },
-  news:  { ground:'g4', tone:'dark',  align:'bottom', takes:'Live search',           art:null },
-  deck:  { ground:'g8', tone:'light', align:'bottom', takes:'4:5 · 9:16 · 16:9',     art:null }
+  /* alternating: odd tiles Palladian, even tiles Blue Fantastic */
+  brief:    { ground:'g2', tone:'light', align:'top',    takes:'Paste an email',         art:null },
+  story:    { ground:'g1', tone:'dark',  align:'bottom', takes:'PDF · DOCX · Images',    art:null },
+  interview:{ ground:'g2', tone:'light', align:'top',    takes:'Researched live',        art:null },
+  proof:    { ground:'g1', tone:'dark',  align:'bottom', takes:'PDF · DOCX · TXT',       art:null },
+  brand:    { ground:'g2', tone:'light', align:'top',    takes:'PNG · JPEG · PDF · MP4', art:null },
+  news:     { ground:'g1', tone:'dark',  align:'bottom', takes:'Live search',            art:null },
+  deck:     { ground:'g2', tone:'light', align:'top',    takes:'4:5 · 9:16 · 16:9',      art:null }
 };
 
 function renderHome(){
