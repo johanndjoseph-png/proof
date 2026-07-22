@@ -82,6 +82,7 @@
   .art.g4{background:radial-gradient(120% 90% at 22% 12%,#3D6E9E 0%,#154677 42%,#0A1F35 100%)}
   .art.g5{background:linear-gradient(200deg,#FFFFFF 0%,#EFECE4 62%,#DFDBD1 100%)}
   .art.g6{background:linear-gradient(340deg,#050A0F 0%,#0E2E4F 64%,#1B5286 100%)}
+  .art.g7{background:radial-gradient(140% 100% at 82% 88%,#2F6396 0%,#123C66 40%,#070E17 100%)}
 
   .card .veilx{position:absolute;inset:0}
   .card.dark .veilx{background:linear-gradient(180deg,rgba(5,10,16,.34) 0%,rgba(5,10,16,0) 42%,rgba(5,10,16,.5) 100%)}
@@ -368,6 +369,35 @@
   .facet p{margin:0;font-size:14px;line-height:1.55}
   .facet .ask{margin-top:7px;color:var(--flag);font-size:13px;font-style:italic}
 
+  /* ---------- interview questions ---------- */
+  .qlist{list-style:none;margin:0;padding:0;counter-reset:q}
+  .qlist li{padding:15px 18px;border-bottom:1px solid var(--rule);display:flex;gap:14px}
+  .qlist li:last-child{border-bottom:0}
+  .qlist .qn{
+    font-family:var(--mono);font-size:11px;color:var(--navy);opacity:.55;
+    padding-top:3px;flex-shrink:0;width:20px;
+  }
+  .qlist .qb{flex:1}
+  .qlist .qt{margin:0;font-size:16.5px;line-height:1.45;font-weight:500;color:var(--ink)}
+  .qlist .qi{margin:6px 0 0;font-size:13px;color:#6B7580;line-height:1.45}
+  .qlist .qf{
+    margin:7px 0 0;font-size:13px;color:var(--navy);line-height:1.45;
+    padding-left:15px;border-left:2px solid var(--rule);
+  }
+  .qlist li.locked{background:#FCFBF9}
+  .qlist li.light .qt::after{
+    content:'lighter';font-family:var(--mono);font-size:8px;letter-spacing:.14em;
+    text-transform:uppercase;color:#9AA3AC;margin-left:9px;vertical-align:middle;
+  }
+  .srcs{margin:0;padding:0;list-style:none}
+  .srcs li{padding:9px 18px;border-bottom:1px solid var(--rule);font-size:13px}
+  .srcs li:last-child{border-bottom:0}
+  .srcs a{color:var(--navy)}
+  .guard{
+    font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:#8A939C;padding:10px 18px;border-top:1px solid var(--rule);
+  }
+
   /* ---------- brief form ---------- */
   .checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px}
   .chk{
@@ -562,6 +592,13 @@ Return ONLY valid JSON, no markdown fences, no preamble:
  ]
 }`;
     }
+  },
+  {
+    id: 'interview',
+    name: 'Interview questions',
+    lede: 'Give it a subject and a topic. It researches their actual work, then writes questions worth asking.',
+    custom: true,
+    render: mountInterviewBuilder
   },
   {
     id: 'proof',
@@ -1240,6 +1277,186 @@ function mountBriefBuilder(mount){
 }
 
 /* ============================================================
+   INTERVIEW QUESTIONS
+   ============================================================ */
+
+const OPENER = 'Your name, and what do you do?';
+
+const SETTINGS_IV = {
+  camera:  'Filmed interview — questions spoken aloud, tight enough to hold on camera',
+  podcast: 'Podcast or long-form conversation — questions can open out and invite a longer answer',
+  written: 'Written Q&A — questions can be more precisely worded and more technical'
+};
+
+const iv = { name:'', role:'', topic:'', setting:'camera', count:'10', result:null };
+
+async function generateQuestions(){
+  const sys = `You are preparing questions for an interview at a world-leading research university. The register is a Nobel laureate profile or a flagship Oxford, Harvard, Cambridge or Carnegie Mellon feature: serious, curious, and unafraid of difficulty. The audience is intelligent and well read — assume they already grasp the basics and are bored by them.
+
+SUBJECT: ${iv.name}${iv.role ? ' — ' + iv.role : ''}
+TOPIC: ${iv.topic}
+SETTING: ${SETTINGS_IV[iv.setting]}
+NUMBER OF QUESTIONS TO WRITE: ${Math.max(2, Number(iv.count) - 1)}
+
+First, search for this person's actual work — published papers, specific results, positions held, recent talks, collaborations, anything concrete and verifiable. Then ground the questions in what you found. Name the work. A question that could have been asked of any researcher in any field is a failed question.
+
+RULES, in order of importance:
+
+1. Question 1 is already written and fixed. Begin your numbering at 2.
+
+2. No softballs. These are banned outright: what inspired you, walk us through a typical day, what advice would you give young people, how does it feel to, what's next for you, what are you most proud of, and any question answerable in one sentence without thinking. Nothing that exists only to flatter the subject.
+
+3. Every question should make them think, and should be one they have not already answered fifty times. Reach for: the tension inside their own results, what evidence would falsify the work, where the method breaks down, what the field currently gets wrong, what they have changed their mind about, the trade-off they find hardest to live with, the thing that surprised them and that they still cannot explain, what the work would look like if the central assumption were wrong.
+
+4. Absolutely no politics, geopolitics, government or institutional policy, national affairs, funding controversy, or religion — and nothing adjacent to them. If the topic pulls in that direction, steer firmly back to the science, the method, or the craft. This rule is not negotiable.
+
+5. At most two lighter questions, placed late in the run. They must still be intelligent — sideways and human, never trivial. Mark these with tone "light". Everything else is tone "core".
+
+6. Write questions to be said out loud by an interviewer. One idea per question. No stacked multi-part questions.
+
+For each question also give: the intent — what you are actually trying to get the subject to reveal, in one sentence — and one follow-up to use if the first answer stays on the surface.
+
+Return ONLY valid JSON, no markdown fences, no preamble:
+{
+ "briefing":{
+   "summary":"three or four sentences on who this is and what the work actually is",
+   "notable":["specific findings, papers, or positions you verified"],
+   "sources":[{"title":"source","url":"https://..."}]
+ },
+ "questions":[
+   {"n":2,"question":"...","intent":"...","followUp":"...","tone":"core"}
+ ]
+}`;
+  return callClaude(sys, [{ type:'text', text:`Research ${iv.name} and write the questions.` }], true);
+}
+
+function interviewMarkdown(){
+  const r = iv.result;
+  const L = [`# Interview — ${iv.name}`, '', `**Topic:** ${iv.topic}`, `**Setting:** ${SETTINGS_IV[iv.setting]}`, ''];
+  if(r.briefing){
+    L.push('## Briefing','', r.briefing.summary || '', '');
+    (r.briefing.notable||[]).forEach(n=>L.push(`- ${n}`));
+    L.push('');
+  }
+  L.push('## Questions','', `**1.** ${OPENER}`, '');
+  (r.questions||[]).forEach(q=>{
+    L.push(`**${q.n}.** ${q.question}`, '', `_Intent: ${q.intent}_`, q.followUp ? `_Follow-up: ${q.followUp}_` : '', '');
+  });
+  if(r.briefing?.sources?.length){
+    L.push('## Sources','');
+    r.briefing.sources.forEach(s=>L.push(`- [${s.title}](${s.url})`));
+  }
+  return L.join('\n');
+}
+
+function mountInterviewBuilder(mount){
+  mount.innerHTML = `
+  <section class="panel">
+    <h3>Subject</h3>
+    <div class="body">
+      <div class="grid2">
+        <label class="g"><span>Who are you interviewing</span><input id="iv_name" placeholder="Full name"></label>
+        <label class="g"><span>Role or affiliation</span><input id="iv_role" placeholder="Helps find the right person"></label>
+      </div>
+      <label class="g"><span>What is the interview about</span>
+        <textarea id="iv_topic" placeholder="The paper, the programme, the announcement — and what the piece is for."></textarea>
+      </label>
+      <div class="grid2">
+        <label class="g"><span>Setting</span>
+          <select id="iv_setting">${Object.entries(SETTINGS_IV).map(([k,v])=>
+            `<option value="${k}">${v.split(' — ')[0]}</option>`).join('')}</select>
+        </label>
+        <label class="g"><span>How many questions</span>
+          <select id="iv_count"><option>8</option><option selected>10</option><option>12</option><option>16</option></select>
+        </label>
+      </div>
+      <div class="runrow">
+        <button class="run" id="ivGo">Research and write questions</button>
+        <span class="hint" id="ivHint"></span>
+      </div>
+      <p class="note">Question 1 is fixed. Politics and religion are excluded by design, and the brief is written against softballs — if a question comes back lazy, regenerate rather than keeping it.</p>
+    </div>
+  </section>
+  <div id="ivOut"></div>`;
+
+  [['name','iv_name'],['role','iv_role'],['topic','iv_topic'],['setting','iv_setting'],['count','iv_count']]
+    .forEach(([k,id])=>{
+      const el = $('#'+id);
+      if(iv[k]) el.value = iv[k];
+      el.oninput = el.onchange = ()=> iv[k] = el.value;
+    });
+
+  $('#ivGo').onclick = async ()=>{
+    if(!iv.name.trim())  return $('#ivHint').textContent = 'Add a name first';
+    if(!iv.topic.trim()) return $('#ivHint').textContent = 'Say what the interview is about';
+    if(!state.cfg.apiKey) return $('#ivHint').textContent = 'Add an API key in Settings';
+    $('#ivGo').disabled = true; $('#ivGo').innerHTML = '<span class="spin"></span>Researching…';
+    $('#ivHint').textContent = 'Searching for published work — this one takes a moment';
+    try{
+      iv.result = await generateQuestions();
+      renderInterview();
+      $('#ivHint').textContent = '';
+    }catch(err){ $('#ivHint').textContent = err.message; }
+    $('#ivGo').disabled = false; $('#ivGo').textContent = 'Research and write questions';
+  };
+
+  if(iv.result) renderInterview();
+}
+
+function renderInterview(){
+  const r = iv.result, b = r.briefing || {};
+  $('#ivOut').innerHTML = `
+    ${b.summary ? `
+    <section class="panel">
+      <h3>Briefing</h3>
+      <div class="body" style="padding-bottom:6px"><p style="margin:0 0 12px">${esc(b.summary)}</p></div>
+      ${(b.notable||[]).length ? `<ul class="srcs" style="border-top:1px solid var(--rule)">${
+        (b.notable).map(n=>`<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+    </section>` : ''}
+
+    <section class="panel">
+      <h3 style="display:flex;justify-content:space-between;align-items:center">
+        Questions <span><button class="copy" id="ivCopy">Copy</button> <button class="copy" id="ivDl">Download</button></span>
+      </h3>
+      <ul class="qlist">
+        <li class="locked">
+          <span class="qn">01</span>
+          <div class="qb"><p class="qt">${esc(OPENER)}</p>
+          <p class="qi">Fixed opener — gives you a clean self-identification for the edit.</p></div>
+        </li>
+        ${(r.questions||[]).map(q=>`
+        <li class="${q.tone === 'light' ? 'light' : ''}">
+          <span class="qn">${String(q.n).padStart(2,'0')}</span>
+          <div class="qb">
+            <p class="qt">${esc(q.question)}</p>
+            ${q.intent ? `<p class="qi">${esc(q.intent)}</p>` : ''}
+            ${q.followUp ? `<p class="qf">If it stays on the surface: ${esc(q.followUp)}</p>` : ''}
+          </div>
+        </li>`).join('')}
+      </ul>
+      <p class="guard">No politics · No religion · ${(r.questions||[]).filter(q=>q.tone==='light').length} lighter question${(r.questions||[]).filter(q=>q.tone==='light').length===1?'':'s'}</p>
+    </section>
+
+    ${(b.sources||[]).length ? `
+    <section class="panel">
+      <h3>Sources</h3>
+      <ul class="srcs">${b.sources.map(s=>
+        `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || s.url)}</a></li>`).join('')}</ul>
+    </section>` : ''}`;
+
+  $('#ivCopy').onclick = ()=>{
+    navigator.clipboard.writeText(interviewMarkdown());
+    $('#ivCopy').textContent = 'Copied'; setTimeout(()=>$('#ivCopy').textContent='Copy',1600);
+  };
+  $('#ivDl').onclick = ()=>{
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([interviewMarkdown()], {type:'text/markdown'}));
+    a.download = `interview-${iv.name.toLowerCase().replace(/\W+/g,'-')}.md`;
+    a.click();
+  };
+}
+
+/* ============================================================
    HOME BOARD
    Each service gets one card. `art` is the image slot — set it to
    a URL (or a data URL) and the gradient underneath is replaced.
@@ -1248,6 +1465,7 @@ function mountBriefBuilder(mount){
 const CARDS = {
   brief: { ground:'g1', tone:'dark',  align:'bottom', takes:'Paste an email',        art:null },
   story: { ground:'g2', tone:'light', align:'top',    takes:'PDF · DOCX · Images',   art:null },
+  interview:{ground:'g7',tone:'dark',  align:'bottom', takes:'Researched live',      art:null },
   proof: { ground:'g3', tone:'dark',  align:'bottom', takes:'PDF · DOCX · TXT',      art:null },
   brand: { ground:'g4', tone:'dark',  align:'bottom', takes:'PNG · JPEG · PDF · MP4',art:null },
   news:  { ground:'g5', tone:'light', align:'top',    takes:'Live search',           art:null },
